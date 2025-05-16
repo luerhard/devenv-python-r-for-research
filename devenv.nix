@@ -19,6 +19,7 @@ let
       jsonlite
       here
       languageserver
+      lintr
     ];
   };
   kernelsDir = ".devenv/.jupyter/kernels";
@@ -59,7 +60,7 @@ in
 
   # https://devenv.sh/processes/
   processes = {
-    jupyter.exec = "uv run jupyter notebook --no-browser --ip='localhost' --ServerApp.token='' --ServerApp.password=''";
+    jupyter.exec = "uv run jupyter notebook --no-browser --ip='localhost' --IdentityProvider.token='' --ServerApp.password=''";
   };
 
   # https://devenv.sh/services/
@@ -81,13 +82,15 @@ in
     # set up Jupyter to look for kernels in the '.jupyter' dir:
     echo "Jupyter R kernel is ready."
 
+    uv run python -m ipykernel install --prefix="/tmp" --name="python" --display-name="Python (devenv)" 2> /dev/null
+    cp -r /tmp/share/jupyter/kernels/python ${kernelsDir}/
+
+    echo "Python (devenv) kernel is ready."
   '';
 
   enterShell = ''
     setup-jupyter
     export JUPYTER_PATH="$PWD/.devenv/.jupyter"
-
-    uv sync
     export RETICULATE_PYTHON=$(uv run python -c "import sys; print(sys.executable)")
   '';
 

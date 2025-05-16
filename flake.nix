@@ -21,6 +21,7 @@
       self,
       nixpkgs,
       devenv,
+      nix-gl-host,
       systems,
       ...
     }@inputs:
@@ -86,7 +87,7 @@
                     pkgs.git
                   ]
                   ++ pkgs.lib.lists.optional pkgs.stdenv.isLinux [
-                    pkgs.nix-gl-host.defaultPackage.${"linux_x86-64"}
+                    nix-gl-host.defaultPackage.${system}
                   ];
 
                 scripts.setup-jupyter.exec = ''

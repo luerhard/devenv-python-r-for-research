@@ -101,6 +101,7 @@ in
   enterTest = ''
     echo "Running tests"
     git --version | grep --color=auto "${pkgs.git.version}"
+    uv run pytest
   '';
 
   # https://devenv.sh/git-hooks/

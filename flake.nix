@@ -37,7 +37,16 @@
       devShells = forEachSystem (
         system:
         let
-          pkgs = nixpkgs.legacyPackages.${system};
+          pkgs = import nixpkgs {
+            inherit system;
+            config = {
+              allowUnfree = true; # necessary for CUDA
+            };
+            overlays = [
+              (import ./nix/python-overlay.nix)
+              (import ./nix/r-overlay.nix)
+            ];
+          };
           rEnv = pkgs.rWrapper.override {
             packages = with pkgs.rPackages; [
               # always deps

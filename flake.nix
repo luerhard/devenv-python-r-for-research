@@ -68,8 +68,8 @@
                 [
                   pkgs.gcc
                   pkgs.git
-                 #]
-                 #++ pkgs.lib.lists.optional pkgs.stdenv.isLinux [
+                 ]
+                 ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
                   nix-gl-host.defaultPackage.${system}
                 ];
 

@@ -12,7 +12,7 @@
 
   nixConfig = {
     extra-trusted-public-keys = "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=";
-    extra-substituters = "https://devenv.cachix.org";
+    extra-trusted-substituters = "https://devenv.cachix.org";
   };
 
   outputs =
@@ -88,7 +88,7 @@
                 # set up Jupyter to look for kernels in the '.jupyter' dir:
                 echo "Jupyter R kernel is ready."
 
-                uv run python -m ipykernel install --prefix="/tmp" --name="python" --display-name="Python" 2> /dev/null
+                uv run python -m ipykernel install --prefix="/tmp" --name="python" --display-name="Python" > /dev/null 2>&1
                 cp -r /tmp/share/jupyter/kernels/python ${kernelsDir}/
 
                 echo "Python (devenv) kernel is ready."

@@ -24,7 +24,7 @@
       ...
     }@inputs:
     let
-      system = "aarch64-darwin";
+      system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
       rEnv = pkgs.rWrapper.override {
         packages = with pkgs.rPackages; [
@@ -68,8 +68,8 @@
                 [
                   pkgs.gcc
                   pkgs.git
-                ]
-                ++ pkgs.lib.lists.optional pkgs.stdenv.isLinux [
+                 #]
+                 #++ pkgs.lib.lists.optional pkgs.stdenv.isLinux [
                   nix-gl-host.defaultPackage.${system}
                 ];
 

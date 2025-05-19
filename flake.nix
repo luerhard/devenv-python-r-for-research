@@ -28,9 +28,6 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [
-            (import .nix/r-overlay.nix)
-          ]
         };
 
         kernelsDir = ".devenv/.jupyter/kernels";

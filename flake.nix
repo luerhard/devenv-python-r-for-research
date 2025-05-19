@@ -36,7 +36,6 @@
 
         defaultSystemDeps = [
           # always system deps
-          pkgs.git
           pkgs.gcc
           # weird build deps for rpy2
           pkgs.bzip2
@@ -45,6 +44,9 @@
           pkgs.xz
           pkgs.zlib
           # # rpy2 deps end
+        ] ++ pkgs.lib.lists.optionals pkgs.stdenv.isLinux [
+          nix-gl-host.defaultPackage.${system}
+          pkgs.glibcLocales
         ];
 
         defaultRPackages = with pkgs.rPackages; [
@@ -71,10 +73,7 @@
                 packages =
                   defaultSystemDeps
                   ++ [
-                    pkgs.ffmpeg
-                  ]
-                  ++ pkgs.lib.lists.optionals pkgs.stdenv.isLinux [
-                    nix-gl-host.defaultPackage.${system}
+                    pkgs.git
                   ];
 
                 # R dependencies
@@ -117,7 +116,7 @@
                     # set up Jupyter to look for kernels in the '.jupyter' dir:
                     echo "Jupyter R kernel is ready."
 
-                    uv run python -m ipykernel install --prefix="/tmp" --name="python" --display-name="Python" > /dev/null 2>&1
+                    uv run python -m ipykernel install --prefix="/tmp" --name="python" --display-name="Python (devenv)" > /dev/null 2>&1
                     cp -r /tmp/share/jupyter/kernels/python $kernelsDir/
 
                     echo "Python (devenv) kernel is ready."
@@ -133,6 +132,7 @@
                 };
 
                 enterShell = ''
+                  export UV_LINK_MODE="copy"
                   export JUPYTER_PATH="$PWD/.devenv/.jupyter"
                   export RETICULATE_PYTHON=$(uv run python -c "import sys; print(sys.executable)")
                 '';

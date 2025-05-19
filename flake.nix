@@ -58,7 +58,7 @@
                     pkgs.zlib
                     # # rpy2 deps end
                   ]
-                  ++ pkgs.lib.lists.optional pkgs.stdenv.isLinux [
+                  ++ pkgs.lib.lists.optionals pkgs.stdenv.isLinux [
                     nix-gl-host.defaultPackage.${system}
                   ];
 

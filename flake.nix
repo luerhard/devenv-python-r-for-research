@@ -7,7 +7,6 @@
     nixpkgs-python.inputs = {
       nixpkgs.follows = "nixpkgs";
     };
-    nix-gl-host.url = "github:numtide/nix-gl-host";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -21,7 +20,6 @@
       self,
       nixpkgs,
       devenv,
-      nix-gl-host,
       flake-utils,
       ...
     }@inputs:
@@ -30,6 +28,9 @@
       let
         pkgs = import nixpkgs {
           inherit system;
+          overlays = [
+            (import .nix/r-overlay.nix)
+          ]
         };
 
         kernelsDir = ".devenv/.jupyter/kernels";
@@ -42,10 +43,8 @@
           pkgs.icu
           pkgs.libdeflate
           pkgs.xz
-          pkgs.zlib
-          # # rpy2 deps end
+          pkgs.zlib # # rpy2 deps end
         ] ++ pkgs.lib.lists.optionals pkgs.stdenv.isLinux [
-          nix-gl-host.defaultPackage.${system}
           pkgs.glibcLocales
         ];
 
@@ -55,7 +54,6 @@
           svglite
           IRkernel
           jsonlite
-          here
           languageserver
           lintr
         ];
@@ -71,10 +69,9 @@
               {
                 # system dependencies
                 packages =
-                  defaultSystemDeps
-                  ++ [
+                  [
                     pkgs.git
-                  ];
+                  ] ++ defaultSystemDeps;
 
                 # R dependencies
                 languages.r = {
@@ -83,6 +80,7 @@
                     packages =
                       with pkgs.rPackages;
                       [
+                        here
                         tidyverse
                       ]
                       ++ defaultRPackages;
@@ -99,12 +97,12 @@
 
                 scripts = {
                   setup-jupyter.exec = ''
-                    echo "Setting up R kernel for Jupyter..."
+                    echo "Setting up kernels for Jupyter..."
 
+                    echo "R kernel"
                     kernelsDir=.devenv/.jupyter/kernels
 
                     # Ensure an 'ir' folder exists in 'KernelsDir':
-                    echo "Ensuring folder exists"
                     mkdir -p $kernelsDir/ir
 
                     # Copy the files using interpolation
@@ -112,14 +110,15 @@
 
                     # Add write permission
                     chmod -R u+w $kernelsDir/ir
+                    sed -i 's/"display_name": *"R"/"display_name": "R (devenv)"/' $kernelsDir/ir/kernel.json
 
                     # set up Jupyter to look for kernels in the '.jupyter' dir:
-                    echo "Jupyter R kernel is ready."
+                    echo "Jupyter kernel R (devenv)  is ready."
 
                     uv run python -m ipykernel install --prefix="/tmp" --name="python" --display-name="Python (devenv)" > /dev/null 2>&1
                     cp -r /tmp/share/jupyter/kernels/python $kernelsDir/
 
-                    echo "Python (devenv) kernel is ready."
+                    echo "Jupyter kernel Python (devenv) is ready."
 
                   '';
                 };

@@ -34,10 +34,33 @@
 
         kernelsDir = ".devenv/.jupyter/kernels";
 
+        defaultSystemDeps = [
+          # always system deps
+          pkgs.git
+          pkgs.gcc
+          # weird build deps for rpy2
+          pkgs.bzip2
+          pkgs.icu
+          pkgs.libdeflate
+          pkgs.xz
+          pkgs.zlib
+          # # rpy2 deps end
+        ];
+
+        defaultRPackages = with pkgs.rPackages; [
+          box
+          reticulate
+          svglite
+          IRkernel
+          jsonlite
+          here
+          languageserver
+          lintr
+        ];
+
       in
       {
-        # packages.devenv-up = self.devShells.default.config.procfileScript;
-
+        packages.devenv-up = self.devShells.${system}.default.config.procfileScript;
         devShells.default = devenv.lib.mkShell {
           inherit inputs pkgs;
           modules = [
@@ -46,17 +69,9 @@
               {
                 # system dependencies
                 packages =
-                  [
-                    # always system deps
-                    pkgs.git
-                    pkgs.gcc
-                    # weird build deps for rpy2
-                    pkgs.bzip2
-                    pkgs.icu
-                    pkgs.libdeflate
-                    pkgs.xz
-                    pkgs.zlib
-                    # # rpy2 deps end
+                  defaultSystemDeps
+                  ++ [
+                    pkgs.ffmpeg
                   ]
                   ++ pkgs.lib.lists.optionals pkgs.stdenv.isLinux [
                     nix-gl-host.defaultPackage.${system}
@@ -66,20 +81,12 @@
                 languages.r = {
                   enable = true;
                   package = pkgs.rWrapper.override {
-                    packages = with pkgs.rPackages; [
-                      # always deps
-                      box
-                      reticulate
-                      svglite
-                      tidyverse
-                      IRkernel
-                      jsonlite
-                      here
-                      languageserver
-                      lintr
-                      # custom deps
-
-                    ];
+                    packages =
+                      with pkgs.rPackages;
+                      [
+                        tidyverse
+                      ]
+                      ++ defaultRPackages;
                   };
                 };
 
@@ -88,11 +95,11 @@
                   enable = true;
                   version = "3.12";
                   uv.enable = true;
+                  uv.sync.enable = true;
                 };
 
-                processes = {
-                  jupyter.exec = ''
-
+                scripts = {
+                  setup-jupyter.exec = ''
                     echo "Setting up R kernel for Jupyter..."
 
                     kernelsDir=.devenv/.jupyter/kernels
@@ -115,6 +122,12 @@
 
                     echo "Python (devenv) kernel is ready."
 
+                  '';
+                };
+
+                processes = {
+                  jupyter.exec = ''
+                    setup-jupyter
                     uv run jupyter notebook --no-browser --ip="localhost" --IdentityProvider.token="" --ServerApp.password=""
                   '';
                 };

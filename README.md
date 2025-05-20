@@ -19,11 +19,11 @@ This comes with several advantages: 1) Support for python in nix is not good, so
 
 # Using Jupyter
 
-It can be started from within the shell using `devenv up`
+It can be started from within the shell using `jupyter-start`
 
 ```
 nix develop . --impure
-devenv up
+jupyter-start
 ```
 
 then go to `http://localhost:8888`or use vscode with the existing jupyter server at this adress.

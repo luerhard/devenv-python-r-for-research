@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -16,6 +16,10 @@
       let
         pkgs = import nixpkgs {
           inherit system;
+          overlays = [
+            (import ./nix/r-overlay.nix)
+
+          ];
         };
 
         kernelsDir = ".devenv/.jupyter/kernels";
@@ -45,7 +49,13 @@
 
           echo "Jupyter kernel Python (devenv) is ready."
 
-          uv run jupyter notebook --no-browser --ip="localhost" --IdentityProvider.token="" --ServerApp.password=""
+          uv run jupyter notebook \
+          --no-browser \
+          --ip="localhost" \
+          --IdentityProvider.token="" \
+          --ServerApp.password="" \
+          --ServerApp.kernel_spec_manager_class='jupyter_client.kernelspec.KernelSpecManager' \
+          --KernelSpecManager.allowed_kernelspecs="['python', 'ir']"
 
         '';
 
@@ -53,28 +63,38 @@
           [
             # always system deps
             pkgs.gcc
-            pkgs.R
             pkgs.uv
             # weird build deps for rpy2
             pkgs.bzip2
             pkgs.icu
             pkgs.libdeflate
+            pkgs.gettext
             pkgs.xz
             pkgs.zlib # # rpy2 deps end
+            pkgs.R
             jupyterStart
           ]
           ++ pkgs.lib.lists.optionals pkgs.stdenv.isLinux [
             pkgs.glibcLocales
           ];
 
-        defaultRPackages = with pkgs.rPackages; [
+        REnv = with pkgs.rPackages; [
+          # always deps
           box
           reticulate
           svglite
+          tidyverse
           IRkernel
           jsonlite
+          here
           languageserver
-          lintr
+          # m-effect
+          marginaleffects
+          effects
+          collapse
+          ggeffects
+          ggpubr
+          #
         ];
 
       in
@@ -84,15 +104,22 @@
             [
               pkgs.git
             ]
-            ++ defaultRPackages
+            ++ REnv
             ++ defaultSystemDeps;
           shellHook = ''
+            export UV_LINK_MODE=copy
+            export UV_MANAGED_PYTHON=true
+            export UV_PYTHON_DOWNLOADS="automatic"
+            export TZ="Europe/Berlin"
+            export R_HOME=$(Rscript -e "cat(R.home())")
             uv sync
+            source .venv/bin/activate
+
             export JUPYTER_PATH="$PWD/.venv/.jupyter"
-            export PYTHONPATH="$(pwd):$PYTHONPATH"
-            export RETICULATE_PYTHON=$(which python)
+            export RETICULATE_PYTHON=$(uv python find)
           '';
         };
       }
     );
 }
+
